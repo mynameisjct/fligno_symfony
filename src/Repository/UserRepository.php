@@ -6,6 +6,8 @@ use App\Entity\User;
 use App\Entity\Profile;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 /**
  * @method User|null find($id, $lockMode = null, $lockVersion = null)
@@ -15,9 +17,14 @@ use Doctrine\Common\Persistence\ManagerRegistry;
  */
 class UserRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    private $manager;
+    private $encoder;
+
+    public function __construct(ManagerRegistry $registry, EntityManagerInterface $entity, UserPasswordEncoderInterface $encoder)
     {
         parent::__construct($registry, User::class);
+        $this->manager = $entity;
+        $this->encoder = $encoder;
     }
 
     // /**
@@ -88,5 +95,18 @@ class UserRepository extends ServiceEntityRepository
                     ->setParameter('id', $user)
                     ->getQuery()
                     ->getOneOrNullResult();
+    }
+
+    public function save($data): ?User{
+        $user = new User();
+        $user->setEmail($data['email']);
+        $encoded = $this->encoder->encodePassword($user,$data['password']);
+        $user->setPassword($encoded);
+        $user->setName('');
+
+        $this->manager->persist($user);
+        $this->manager->flush();
+
+        return $user;    
     }
 }

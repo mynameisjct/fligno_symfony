@@ -7,6 +7,7 @@ use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\ORM\Query\Expr;
 
 /**
  * @method Profile|null find($id, $lockMode = null, $lockVersion = null)
@@ -116,9 +117,71 @@ class ProfileRepository extends ServiceEntityRepository
     }
 
     public function select(){
-        $qb = $this->entityManager->createQuery('SELECT p.lastname,p.firstname,p.middlename,p.description,p.pp_path, p.pp_cover_path,u.email,u.id FROM App\Entity\User u JOIN App\Entity\Profile p where p.user = u.id');
+        $qb = $this->entityManager->createQuery(
+            'SELECT p.lastname,p.firstname,p.middlename,p.description,p.pp_path, p.pp_cover_path,u.email,u.id 
+             FROM App\Entity\User u 
+             JOIN App\Entity\Profile p 
+             where p.user = u.id'
+        );
+
         $res = $qb->getResult();
 
         return $res;
     }
+
+    public function getUserByEmail($email){
+        $qb =  $this->createQueryBuilder('p');
+
+                    $qb->select('p.id,p.lastname, p.middlename, p.firstname, p.description,u.id as userid')
+                    ->leftJoin(User::class, 'u', Expr\Join::WITH, $qb->expr()->eq('u.id', 'p.user'))
+                    ->where('u.email = ?1')
+                    ->setParameter(1,$email)
+        ;
+
+        return $qb->getQuery()->getOneOrNullResult();
+        // echo $qb; // to view query builder
+    }
+
+    public function updateProfile($data,$user)
+    {
+        $qb = $this->createQueryBuilder('p');
+
+             $qb->update()
+                ->set('p.firstname', '?1')
+                ->set('p.middlename', '?2')
+                ->set('p.lastname', '?3')   
+                // ->set('p.pp_path', '?4')
+                // ->set('p.pp_cover_path', '?5')
+                ->set('p.description', '?6')
+                ->where('p.user = ?7')
+                ->setParameter(1 ,$data['firstname'])
+                ->setParameter(2 ,$data['middlename'])
+                ->setParameter(3 ,$data['lastname'])
+                // ->setParameter(4 ,$user[2])
+                // ->setParameter(5 ,$user[3])
+                ->setParameter(6 ,$data['description'])
+                ->setParameter(7 ,$user)
+        ;
+
+        return $qb->getQuery()->getOneOrNullResult();
+
+    }
+
+    public function saveProfile($data,$user){
+        $profile = new Profile();
+        $profile->setFirstname($data['firstname']);
+        $profile->setMiddlename($data['middlename']);
+        $profile->setLastname($data['lastname']);
+        $profile->setDescription($data['description']);
+        $profile->setPpCoverPath('');
+        $profile->setPpPath('');
+        $profile->setUser($user);
+
+        $this->entityManager->persist($profile);
+        $this->entityManager->flush();
+
+        return $profile;
+    }
+       
+    
 }

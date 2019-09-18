@@ -120,7 +120,47 @@ class ProfileController extends AbstractController
 
         return $this->json(['message'=>$message,'error'=>$error]);
     }
+
+    /**
+     * @Route("/get/profile/{email}", name="app_fetch_profile", methods={"GET"})
+     */
+    public function getUserProfile(string $email){
+        
+        return $this->json($this->profile_repo->getUserByEmail($email));
+    }
+
+    /**
+     * @Route("/profile/update", name="app_profile_update", methods={"POST"})
+     */
+    public function updateProfile(Request $request){
+        $data = json_decode($request->getContent(), true);
+
+        $user = $this->userRepo->findIdById($data['userid']);
+
+        return $this->json($this->profile_repo->updateProfile($data,$user));
+    }
+
+    /**
+     * @Route("/profile/save", name="app_profile_save", methods={"POST"})
+     */
+    public function save(Request $request) : Response{
+        $data = json_decode($request->getContent(), true);
+
+        /** PERFORM SAVE USER */
+        $user = $this->userRepo->save($data);
+
+        /** PERFORM SAVE PROFILE */
+        $profile = $this->profile_repo->saveProfile($data,$user);
+
+        if($profile === null || empty($profile)){
+            return $this-json(['error' => false]); // has error
+        }else
+            return $this->json(['error' => true]);
+    }
+
 }
+
+
 
 // $this->userRepo = $userRepo;
 // $this->profile_repo = $prof;
