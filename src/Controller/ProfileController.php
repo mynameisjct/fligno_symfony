@@ -158,6 +158,22 @@ class ProfileController extends AbstractController
             return $this->json(['error' => true]);
     }
 
+    /**
+     * @Route("/profile/search/{limit}/{name}", name="app_profile_search", methods={"GET"})
+     */
+    public function search(string $name, int $limit) : Response{
+        return $this->json($this->profile_repo->search($name,$limit));
+    }
+
+    /**
+     * @Route("/profile/reports/monthly/{year}", name="app_profile_reports_yearly", methods={"GET"})
+     */
+
+     public function yearly_reports(string $year) : Response{
+         return $this->json($this->profile_repo->yearlyStat($year));
+
+     }
+
 }
 
 

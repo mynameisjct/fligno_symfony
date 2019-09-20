@@ -109,4 +109,19 @@ class UserRepository extends ServiceEntityRepository
 
         return $user;    
     }
+
+    public function resetPassword($user, $password){
+        $qb = $this->createQueryBuilder('u');
+
+                $qb->update()
+                    ->set('u.password', '?1')
+                    ->where('u.id = ?2')
+                    ->setParameter(1, $password)
+                    ->setParameter(2, $user)
+                    ->getQuery()
+                    ->getOneOrNullResult()
+        ;
+
+        return $qb;
+    }
 }

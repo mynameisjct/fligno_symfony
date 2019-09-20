@@ -51,6 +51,11 @@ class Profile
      */
     private $user;
 
+    /**
+     * @ORM\Column(type="datetime")
+     */
+    private $date_created;
+
 
     public function getId(): ?int
     {
@@ -137,6 +142,18 @@ class Profile
     public function setUser(?User $user): self
     {
         $this->user = $user;
+
+        return $this;
+    }
+
+    public function getDateCreated(): ?\DateTimeInterface
+    {
+        return $this->date_created;
+    }
+
+    public function setDateCreated(\DateTimeInterface $date_created): self
+    {
+        $this->date_created = $date_created;
 
         return $this;
     }
